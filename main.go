@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -27,7 +28,7 @@ type Cell struct {
 
 func newCell(x, y int) *Cell {
 	// if it is the starting cell or the goal cell dont make it an obstacle
-	isObstacle := rand.Float64() < 0.35
+	isObstacle := rand.Float64() < 0.1
 	if (x == 0 && y == 0) || (x == rows-1 && y == cols-1) {
 		isObstacle = false
 	}
@@ -101,6 +102,7 @@ func contains(elt Cell, arr []Cell) bool {
 
 func main() {
 	rl.InitWindow(windowsW+lineThickness, windowsH+lineThickness, "Gastar - A* Path Finding")
+	rand.Seed(time.Now().Unix())
 
 	openSet := []Cell{}
 	closedSet := []Cell{}
@@ -130,9 +132,11 @@ func main() {
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
+		fmt.Println(openSet)
 
 		rl.ClearBackground(rl.RayWhite)
 
+		var current Cell
 		// Check if A* is still searching for path
 		if len(openSet) > 0 {
 
@@ -142,7 +146,7 @@ func main() {
 					bestCell = i
 				}
 			}
-			current := openSet[bestCell]
+			current = openSet[bestCell]
 			if current.x == goal.x && current.y == goal.y {
 				// rl.EndDrawing()
 				fmt.Println("Found the path!")
@@ -158,21 +162,37 @@ func main() {
 				}
 
 				tempG := current.g + heuristic(neighbour, current)
+				newPath := false
 				if !contains(neighbour, openSet) {
 					if !neighbour.isObstacle {
+						newPath = true
 						current.neighbours[i].g = tempG
-						current.neighbours[i].h = heuristic(neighbour, goal)
-						current.neighbours[i].f = current.neighbours[i].g + current.neighbours[i].h
 						openSet = append(openSet, current.neighbours[i])
 					}
 				} else {
-					newPath := false
+					// This neighbour may come from a different current, this is why we set its new G value
 					if tempG < current.neighbours[i].g {
 						current.neighbours[i].g = tempG
 						newPath = true
 					}
 				}
+
+				if newPath {
+					current.neighbours[i].h = heuristic(neighbour, goal)
+					current.neighbours[i].f = current.neighbours[i].g + current.neighbours[i].h
+					current.neighbours[i].previous = &current
+				}
 			}
+		} else {
+			rl.DrawText("No solution!", windowsW/2, windowsH/2, 20, rl.Red)
+		}
+
+		path := []Cell{}
+		temp := current
+		path = append(path, temp)
+		for temp.previous != nil {
+			path = append(path, *temp.previous)
+			temp = *temp.previous
 		}
 
 		// Draw grid
@@ -180,6 +200,10 @@ func main() {
 			for _, cell := range row {
 				cell.draw()
 			}
+		}
+
+		for i := 0; i < len(path)-1; i++ {
+			rl.DrawLine(int32(path[i].x), int32(path[i].y), int32(path[i+1].x), int32(path[i+1].y), rl.Lime)
 		}
 
 		rl.EndDrawing()
