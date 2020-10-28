@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -17,13 +18,11 @@ const (
 )
 
 type Cell struct {
-	x          int
-	y          int
-	f          int
-	g          int
-	h          int
+	x, y       int
+	f, g, h    float64
 	isObstacle bool
 	neighbours []Cell
+	previous   Cell
 }
 
 func newCell(x, y int) *Cell {
@@ -38,6 +37,7 @@ func newCell(x, y int) *Cell {
 		y:          y,
 		isObstacle: isObstacle,
 		neighbours: []Cell{},
+		previous:   Cell{},
 	}
 }
 
@@ -89,6 +89,16 @@ func heuristic(cellA, cellB Cell) float64 {
 	return math.Hypot(math.Abs(float64(cellA.x-cellB.x)), math.Abs(float64(cellA.y-cellB.y)))
 }
 
+func contains(elt Cell, arr []Cell) bool {
+	for _, el := range arr {
+		if el.x == elt.x && el.y == elt.y {
+			return true
+		}
+	}
+
+	return false
+}
+
 func main() {
 	rl.InitWindow(windowsW+lineThickness, windowsH+lineThickness, "Gastar - A* Path Finding")
 
@@ -106,7 +116,10 @@ func main() {
 		}
 	}
 
-	openSet = append(openSet, grid[0][0])
+	start := grid[0][0]
+	goal := grid[rows-1][cols-1]
+
+	openSet = append(openSet, start)
 
 	// Append all neighbours to each cell
 	for i, row := range grid {
@@ -130,10 +143,30 @@ func main() {
 				}
 			}
 			current := openSet[bestCell]
+			if current.x == goal.x && current.y == goal.y {
+				// rl.EndDrawing()
+				fmt.Println("Found the path!")
+			}
 
 			closedSet = append(closedSet, current)
 			openSet = append(openSet[:bestCell], openSet[bestCell+1:]...)
 
+			for i, neighbour := range current.neighbours {
+
+				if contains(neighbour, closedSet) {
+					continue
+				}
+
+				if !contains(neighbour, openSet) && !neighbour.isObstacle {
+					current.neighbours[i].g = current.g + heuristic(neighbour, current)
+					current.neighbours[i].h = heuristic(neighbour, goal)
+					current.neighbours[i].f = current.neighbours[i].g + current.neighbours[i].h
+
+				} else {
+
+				}
+
+			}
 		}
 
 		// Draw grid
