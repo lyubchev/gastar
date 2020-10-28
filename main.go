@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"math/rand"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -26,10 +27,16 @@ type Cell struct {
 }
 
 func newCell(x, y int) *Cell {
+	// if it is the starting cell or the goal cell dont make it an obstacle
+	isObstacle := rand.Float64() < 0.35
+	if (x == 0 && y == 0) || (x == rows-1 && y == cols-1) {
+		isObstacle = false
+	}
+
 	return &Cell{
 		x:          x,
 		y:          y,
-		isObstacle: rand.Float64() < 0.4,
+		isObstacle: isObstacle,
 		neighbours: []Cell{},
 	}
 }
@@ -78,8 +85,15 @@ func (c *Cell) draw() {
 	rl.DrawRectangle(x, y, cellSize-lineThickness, cellSize-lineThickness, color)
 }
 
+func heuristic(cellA, cellB Cell) float64 {
+	return math.Hypot(math.Abs(float64(cellA.x-cellB.x)), math.Abs(float64(cellA.y-cellB.y)))
+}
+
 func main() {
-	rl.InitWindow(windowsW+lineThickness, windowsH+lineThickness, "gAstar - A* path finding")
+	rl.InitWindow(windowsW+lineThickness, windowsH+lineThickness, "Gastar - A* Path Finding")
+
+	openSet := []Cell{}
+	closedSet := []Cell{}
 
 	rl.SetTargetFPS(60)
 
@@ -92,10 +106,12 @@ func main() {
 		}
 	}
 
+	openSet = append(openSet, grid[0][0])
+
 	// Append all neighbours to each cell
-	for _, row := range grid {
-		for _, cell := range row {
-			cell.addNeighbours(grid)
+	for i, row := range grid {
+		for j := range row {
+			grid[i][j].addNeighbours(grid)
 		}
 	}
 
@@ -103,6 +119,22 @@ func main() {
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.RayWhite)
+
+		// Check if A* is still searching for path
+		if len(openSet) > 0 {
+
+			bestCell := 0
+			for i, cell := range openSet {
+				if cell.f < openSet[bestCell].f {
+					bestCell = i
+				}
+			}
+			current := openSet[bestCell]
+
+			closedSet = append(closedSet, current)
+			openSet = append(openSet[:bestCell], openSet[bestCell+1:]...)
+
+		}
 
 		// Draw grid
 		for _, row := range grid {
