@@ -8,11 +8,11 @@ const (
 	cols          = 25
 	rows          = 25
 	cellSize      = windowsW / cols
-	LineThickness = 4
+	lineThickness = 4
 )
 
 func main() {
-	rl.InitWindow(windowsW+LineThickness, windowsH+LineThickness, "gAstar - A* path finding")
+	rl.InitWindow(windowsW+lineThickness, windowsH+lineThickness, "gAstar - A* path finding")
 
 	rl.SetTargetFPS(60)
 
@@ -23,9 +23,9 @@ func main() {
 
 		for i := 0; i < cols; i++ {
 			for j := 0; j < rows; j++ {
-				x := int32(i*cellSize + LineThickness)
-				y := int32(j*cellSize + LineThickness)
-				rl.DrawRectangle(x, y, cellSize-LineThickness, cellSize-LineThickness, rl.LightGray)
+				x := int32(i*cellSize + lineThickness)
+				y := int32(j*cellSize + lineThickness)
+				rl.DrawRectangle(x, y, cellSize-lineThickness, cellSize-lineThickness, rl.LightGray)
 			}
 		}
 
