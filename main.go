@@ -22,7 +22,7 @@ type Cell struct {
 	f, g, h    float64
 	isObstacle bool
 	neighbours []Cell
-	previous   Cell
+	previous   *Cell
 }
 
 func newCell(x, y int) *Cell {
@@ -37,7 +37,7 @@ func newCell(x, y int) *Cell {
 		y:          y,
 		isObstacle: isObstacle,
 		neighbours: []Cell{},
-		previous:   Cell{},
+		previous:   &Cell{},
 	}
 }
 
@@ -157,15 +157,21 @@ func main() {
 					continue
 				}
 
-				if !contains(neighbour, openSet) && !neighbour.isObstacle {
-					current.neighbours[i].g = current.g + heuristic(neighbour, current)
-					current.neighbours[i].h = heuristic(neighbour, goal)
-					current.neighbours[i].f = current.neighbours[i].g + current.neighbours[i].h
-
+				tempG := current.g + heuristic(neighbour, current)
+				if !contains(neighbour, openSet) {
+					if !neighbour.isObstacle {
+						current.neighbours[i].g = tempG
+						current.neighbours[i].h = heuristic(neighbour, goal)
+						current.neighbours[i].f = current.neighbours[i].g + current.neighbours[i].h
+						openSet = append(openSet, current.neighbours[i])
+					}
 				} else {
-
+					newPath := false
+					if tempG < current.neighbours[i].g {
+						current.neighbours[i].g = tempG
+						newPath = true
+					}
 				}
-
 			}
 		}
 
