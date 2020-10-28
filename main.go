@@ -12,7 +12,7 @@ const (
 )
 
 func main() {
-	rl.InitWindow(windowsW+LineThickness, windowsH+LineThickness, "raylib [core] example - basic window")
+	rl.InitWindow(windowsW+LineThickness, windowsH+LineThickness, "gAstar - A* path finding")
 
 	rl.SetTargetFPS(60)
 
