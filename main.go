@@ -83,6 +83,7 @@ func main() {
 
 	rl.SetTargetFPS(60)
 
+	// Generate grid with random obstacles
 	grid := [][]Cell{}
 	for i := 0; i < cols; i++ {
 		grid = append(grid, []Cell{})
@@ -91,16 +92,25 @@ func main() {
 		}
 	}
 
+	// Append all neighbours to each cell
+	for _, row := range grid {
+		for _, cell := range row {
+			cell.addNeighbours(grid)
+		}
+	}
+
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.RayWhite)
 
+		// Draw grid
 		for _, row := range grid {
 			for _, cell := range row {
 				cell.draw()
 			}
 		}
+
 		rl.EndDrawing()
 	}
 
