@@ -12,7 +12,7 @@ const (
 )
 
 func main() {
-	rl.InitWindow(windowsW, windowsH, "raylib [core] example - basic window")
+	rl.InitWindow(windowsW+LineThickness, windowsH+LineThickness, "raylib [core] example - basic window")
 
 	rl.SetTargetFPS(60)
 
@@ -25,7 +25,7 @@ func main() {
 			for j := 0; j < rows; j++ {
 				x := int32(i*cellSize + LineThickness)
 				y := int32(j*cellSize + LineThickness)
-				rl.DrawRectangle(x, y, cellSize*2/3, cellSize*2/3, rl.Green)
+				rl.DrawRectangle(x, y, cellSize-LineThickness, cellSize-LineThickness, rl.LightGray)
 			}
 		}
 
