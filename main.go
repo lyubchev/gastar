@@ -2,8 +2,17 @@ package main
 
 import rl "github.com/gen2brain/raylib-go/raylib"
 
+const (
+	windowsW      = 500
+	windowsH      = 500
+	cols          = 25
+	rows          = 25
+	cellSize      = windowsW / cols
+	LineThickness = 4
+)
+
 func main() {
-	rl.InitWindow(800, 450, "raylib [core] example - basic window")
+	rl.InitWindow(windowsW, windowsH, "raylib [core] example - basic window")
 
 	rl.SetTargetFPS(60)
 
@@ -12,7 +21,13 @@ func main() {
 
 		rl.ClearBackground(rl.RayWhite)
 
-		rl.DrawText("Congrats! You created your first window!", 190, 200, 20, rl.LightGray)
+		for i := 0; i < cols; i++ {
+			for j := 0; j < rows; j++ {
+				x := int32(i*cellSize + LineThickness)
+				y := int32(j*cellSize + LineThickness)
+				rl.DrawRectangle(x, y, cellSize*2/3, cellSize*2/3, rl.Green)
+			}
+		}
 
 		rl.EndDrawing()
 	}
