@@ -1,4 +1,6 @@
 github.com/Lachee/raylib-goplus v0.0.0-20200605081007-7ca39b8afc71 h1:E421h8VUu6xpzr3jN8up9dki1YCFepCHqy9teNhjT9E=
 github.com/Lachee/raylib-goplus v0.0.0-20200605081007-7ca39b8afc71/go.mod h1:Xlg7toyG2MybbhjwHWRKbyGy+k6qn/ztN5/AYcqdl6Y=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gen2brain/raylib-go v0.0.0-20200905153824-5b0944b5567a h1:akS5kJf8OfFVsgXwNqr23pafyatC3gLDXhN4d/1JSC4=
 github.com/gen2brain/raylib-go v0.0.0-20200905153824-5b0944b5567a/go.mod h1:LUVRDQbnxUaOgzLzW5lMS+IcbqlXHIqIA9wq8wxzmcA=
