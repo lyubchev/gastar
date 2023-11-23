@@ -15,20 +15,20 @@ const (
 	cols          = 25
 	rows          = 25
 	cellSize      = windowsW / cols
-	lineThickness = 4
+	lineThickness = 3
 )
 
 type Cell struct {
 	x, y       int
 	f, g, h    float64
 	isObstacle bool
-	neighbours []Cell
+	neighbours []*Cell
 	previous   *Cell
 }
 
 func newCell(x, y int) *Cell {
 	// if it is the starting cell or the goal cell dont make it an obstacle
-	isObstacle := rand.Float64() < 0.1
+	isObstacle := rand.Float64() < 0.3
 	if (x == 0 && y == 0) || (x == rows-1 && y == cols-1) {
 		isObstacle = false
 	}
@@ -37,42 +37,52 @@ func newCell(x, y int) *Cell {
 		x:          x,
 		y:          y,
 		isObstacle: isObstacle,
-		neighbours: []Cell{},
-		previous:   &Cell{},
+		neighbours: []*Cell{},
+		previous:   nil,
 	}
 }
 
 func (c *Cell) addNeighbours(grid [][]*Cell) {
 	if c.x > 0 && c.y > 0 {
-		c.neighbours = append(c.neighbours, *grid[c.x-1][c.y-1])
+		c.neighbours = append(c.neighbours, grid[c.x-1][c.y-1])
 	}
 
 	if c.y > 0 {
-		c.neighbours = append(c.neighbours, *grid[c.x][c.y-1])
+		c.neighbours = append(c.neighbours, grid[c.x][c.y-1])
 	}
 
 	if c.x+1 < rows && c.y > 0 {
-		c.neighbours = append(c.neighbours, *grid[c.x+1][c.y-1])
+		c.neighbours = append(c.neighbours, grid[c.x+1][c.y-1])
 	}
 
 	if c.x > 0 {
-		c.neighbours = append(c.neighbours, *grid[c.x-1][c.y])
+		c.neighbours = append(c.neighbours, grid[c.x-1][c.y])
 	}
 
 	if c.x+1 < rows {
-		c.neighbours = append(c.neighbours, *grid[c.x+1][c.y])
+		c.neighbours = append(c.neighbours, grid[c.x+1][c.y])
 	}
 
 	if c.x > 0 && c.y+1 < cols {
-		c.neighbours = append(c.neighbours, *grid[c.x-1][c.y+1])
+		c.neighbours = append(c.neighbours, grid[c.x-1][c.y+1])
 	}
 
 	if c.y+1 < cols {
-		c.neighbours = append(c.neighbours, *grid[c.x][c.y+1])
+		c.neighbours = append(c.neighbours, grid[c.x][c.y+1])
 	}
 
 	if c.x+1 < rows && c.y+1 < cols {
-		c.neighbours = append(c.neighbours, *grid[c.x+1][c.y+1])
+		c.neighbours = append(c.neighbours, grid[c.x+1][c.y+1])
+	}
+
+	if c.x+1 < rows {
+		if c.y > 0 {
+			c.neighbours = append(c.neighbours, grid[c.x+1][c.y-1])
+		}
+		c.neighbours = append(c.neighbours, grid[c.x+1][c.y])
+		if c.y+1 < cols {
+			c.neighbours = append(c.neighbours, grid[c.x+1][c.y+1])
+		}
 	}
 }
 
@@ -86,11 +96,38 @@ func (c *Cell) draw() {
 	rl.DrawRectangle(x, y, cellSize-lineThickness, cellSize-lineThickness, color)
 }
 
+func (c *Cell) drawStep() {
+	if c == nil {
+		return
+	}
+	x := int32(c.x*cellSize + lineThickness)
+	y := int32(c.y*cellSize + lineThickness)
+	rl.DrawRectangle(x, y, cellSize-lineThickness, cellSize-lineThickness, rl.Lime)
+}
+
+func drawPath(lastStep *Cell) {
+	path := []*Cell{}
+	var temp Cell
+	if lastStep != nil {
+		temp = *lastStep
+	}
+	path = append(path, &temp)
+	for temp.previous != nil {
+		path = append(path, temp.previous)
+		temp = *temp.previous
+	}
+
+	lastStep.drawStep()
+	for _, c := range path {
+		c.drawStep()
+	}
+}
+
 func heuristic(cellA, cellB *Cell) float64 {
 	return math.Hypot(math.Abs(float64(cellA.x-cellB.x)), math.Abs(float64(cellA.y-cellB.y)))
 }
 
-func contains(elt Cell, arr []*Cell) bool {
+func contains(elt *Cell, arr []*Cell) bool {
 	for _, el := range arr {
 		if el.x == elt.x && el.y == elt.y {
 			return true
@@ -107,7 +144,7 @@ func main() {
 	openSet := []*Cell{}
 	closedSet := []*Cell{}
 
-	rl.SetTargetFPS(60)
+	rl.SetTargetFPS(45)
 
 	// Generate grid with random obstacles
 	grid := [][]*Cell{}
@@ -117,7 +154,6 @@ func main() {
 			grid[i] = append(grid[i], newCell(i, j))
 		}
 	}
-
 	start := grid[0][0]
 	goal := grid[rows-1][cols-1]
 
@@ -131,12 +167,45 @@ func main() {
 	}
 
 	pathFound := false
+
+	var lastPath *Cell
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 
-		rl.ClearBackground(rl.RayWhite)
+		if rl.IsKeyReleased(rl.KeyR) {
+			rl.ClearBackground(rl.White)
+			// Restart the loop: generate new obstacles and restart pathfinding
+
+			// Clear the open and closed sets
+			openSet = []*Cell{}
+			closedSet = []*Cell{}
+
+			// Regenerate grid with new obstacles
+			for i := 0; i < cols; i++ {
+				for j := 0; j < rows; j++ {
+					grid[i][j] = newCell(i, j)
+				}
+			}
+
+			start = grid[0][0]
+			goal = grid[rows-1][cols-1]
+
+			openSet = append(openSet, start)
+
+			// Append all neighbours to each cell
+			for i, row := range grid {
+				for j := range row {
+					grid[i][j].addNeighbours(grid)
+				}
+			}
+
+			pathFound = false
+		}
 
 		if pathFound {
+			drawPath(lastPath)
+			rl.DrawText("Path found!", windowsW/2-100, windowsH/2, 35, rl.Orange)
+			rl.EndDrawing()
 			continue
 		}
 
@@ -147,7 +216,6 @@ func main() {
 			}
 		}
 
-		var current *Cell
 		// Check if A* is still searching for path
 		if len(openSet) > 0 {
 
@@ -157,65 +225,53 @@ func main() {
 					bestCell = i
 				}
 			}
-			current = openSet[bestCell]
+			lastPath = openSet[bestCell]
 
 			// Check if we found the path
-			if current.x == goal.x && current.y == goal.y {
+			if lastPath.x == goal.x && lastPath.y == goal.y {
 				pathFound = true
 				fmt.Println("Found the path!")
+				drawPath(lastPath)
+				rl.EndDrawing()
+				continue
 			}
 
-			closedSet = append(closedSet, current)
+			closedSet = append(closedSet, lastPath)
 			openSet = append(openSet[:bestCell], openSet[bestCell+1:]...)
 
-			for i, neighbour := range current.neighbours {
+			for i, neighbour := range lastPath.neighbours {
 				if contains(neighbour, closedSet) {
 					continue
 				}
 
-				tempG := current.g + heuristic(&neighbour, current)
+				tempG := lastPath.g + heuristic(neighbour, lastPath)
 				newPath := false
 				if !contains(neighbour, openSet) {
 					if !neighbour.isObstacle {
 						newPath = true
-						current.neighbours[i].g = tempG
-						openSet = append(openSet, &current.neighbours[i])
+						lastPath.neighbours[i].g = tempG
+						openSet = append(openSet, lastPath.neighbours[i])
 					}
 				} else {
 					// This neighbour may come from a different current, this is why we set its new G value
-					if tempG < current.neighbours[i].g {
-						current.neighbours[i].g = tempG
+					if tempG < lastPath.neighbours[i].g {
+						lastPath.neighbours[i].g = tempG
 						newPath = true
 					}
 				}
 
 				if newPath {
-					current.neighbours[i].h = heuristic(&neighbour, goal)
-					current.neighbours[i].f = current.neighbours[i].g + current.neighbours[i].h
-					current.neighbours[i].previous = current
+					lastPath.neighbours[i].h = heuristic(neighbour, goal)
+					lastPath.neighbours[i].f = lastPath.neighbours[i].g + lastPath.neighbours[i].h
+					lastPath.neighbours[i].previous = lastPath
 				}
 			}
 		} else {
 			rl.DrawText("No solution!", windowsW/2, windowsH/2, 20, rl.Red)
 		}
 
-		path := []*Cell{}
-		var temp Cell
-		if current != nil {
-			temp = *current
-		}
-		path = append(path, &temp)
-		for temp.previous != nil {
-			path = append(path, temp.previous)
-			temp = *temp.previous
-		}
-
-		for i := 0; i < len(path)-1; i++ {
-			rl.DrawLine(int32(path[i].x), int32(path[i].y), int32(path[i+1].x), int32(path[i+1].y), rl.Lime)
-		}
-
+		drawPath(lastPath)
 		rl.EndDrawing()
 	}
-
 	rl.CloseWindow()
 }
