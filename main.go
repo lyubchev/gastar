@@ -143,15 +143,15 @@ func drawButton(x, y, width, height int32, text string, pressed bool) bool {
 	if pressed {
 		color = rl.Gray
 	}
-	
+
 	rl.DrawRectangle(x, y, width, height, color)
 	rl.DrawRectangleLines(x, y, width, height, rl.Black)
-	
+
 	textWidth := rl.MeasureText(text, 16)
 	textX := x + (width-textWidth)/2
 	textY := y + (height-16)/2
 	rl.DrawText(text, textX, textY, 16, rl.Black)
-	
+
 	mousePos := rl.GetMousePosition()
 	return rl.IsMouseButtonPressed(rl.MouseLeftButton) &&
 		mousePos.X >= float32(x) && mousePos.X <= float32(x+width) &&
@@ -160,20 +160,20 @@ func drawButton(x, y, width, height int32, text string, pressed bool) bool {
 
 func drawSlider(x, y, width int32, value, min, max float64, label string) float64 {
 	height := int32(20)
-	
+
 	// Draw slider track
 	rl.DrawRectangle(x, y, width, height, rl.LightGray)
 	rl.DrawRectangleLines(x, y, width, height, rl.Black)
-	
+
 	// Draw slider handle
 	handleX := x + int32(float64(width-10)*((value-min)/(max-min)))
 	rl.DrawRectangle(handleX, y-5, 10, height+10, rl.DarkGray)
-	
+
 	// Draw label and value
 	rl.DrawText(label, x, y-20, 14, rl.Black)
 	valueText := fmt.Sprintf("%.2f", value)
 	rl.DrawText(valueText, x+width-rl.MeasureText(valueText, 14), y-20, 14, rl.Black)
-	
+
 	// Handle mouse interaction
 	mousePos := rl.GetMousePosition()
 	if rl.IsMouseButtonDown(rl.MouseLeftButton) &&
@@ -188,7 +188,7 @@ func drawSlider(x, y, width int32, value, min, max float64, label string) float6
 		}
 		return newValue
 	}
-	
+
 	return value
 }
 
@@ -200,14 +200,14 @@ func generateGrid(obstacleDensity float64) [][]*Cell {
 			grid[i] = append(grid[i], newCell(i, j, obstacleDensity))
 		}
 	}
-	
+
 	// Add neighbours to each cell
 	for i, row := range grid {
 		for j := range row {
 			grid[i][j].addNeighbours(grid)
 		}
 	}
-	
+
 	return grid
 }
 
@@ -216,7 +216,7 @@ func resetPathfinding(grid [][]*Cell) ([]*Cell, []*Cell, *Cell, *Cell) {
 	closedSet := []*Cell{}
 	start := grid[0][0]
 	goal := grid[rows-1][cols-1]
-	
+
 	// Reset all cell values for pathfinding
 	for i := range grid {
 		for j := range grid[i] {
@@ -226,7 +226,7 @@ func resetPathfinding(grid [][]*Cell) ([]*Cell, []*Cell, *Cell, *Cell) {
 			grid[i][j].previous = nil
 		}
 	}
-	
+
 	openSet = append(openSet, start)
 	return openSet, closedSet, start, goal
 }
@@ -239,7 +239,7 @@ func main() {
 	obstacleDensity := 0.3
 	speed := 1.0
 	targetFPS := int32(30 + speed*30) // 30-60 FPS based on speed
-	
+
 	rl.SetTargetFPS(targetFPS)
 
 	// Generate initial grid
@@ -249,7 +249,7 @@ func main() {
 	pathFound := false
 	var lastPath *Cell
 	stepCounter := 0
-	
+
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.White)
